@@ -2,6 +2,10 @@ from random import randrange
 from typing import Optional
 from fastapi import Body, FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
+
 
 app = FastAPI()
 
@@ -22,6 +26,21 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
+
+# cursor_factory=RealDictCursor <- this line just includes the column name also
+# if not included then it will only return values, so to include column name we use it
+# in the following code while loop will keep running until a succesfull connection is not established
+# if  connection is not successfull then it sleeps for 2 seconds then executes while loop again
+while True:
+    try:
+        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres', password='1234', cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("Database connection was successfull")
+        break
+    except Exception as error:
+        print("connection to database failed")
+        print("Error: ", error)
+        time.sleep(2)
 
 @app.get("/")
 def root():
